@@ -1,33 +1,34 @@
-# RSI Signal Dashboard — XAUUSD & NASDAQ
+# RSI Learning Dashboard — XAUUSD & NASDAQ
 
-Aplikasi web statis untuk GitHub Pages. Hanya memuat dua instrumen:
-- XAUUSD (menggunakan `GC=F`, gold futures, sebagai proxy)
-- NASDAQ (menggunakan `NQ=F`, Nasdaq-100 futures, sebagai proxy)
+Dashboard statis untuk GitHub Pages. Hanya menampilkan chart publik TradingView dengan indikator RSI periode 8 dan sumber harga yang jelas.
 
-## Strategi RSI
-- Periode RSI: **8**
-- Apply to: **Close**
-- Full Sell: **80**
-- R Sell: **70**
-- Sideway: **50**
-- R Buy: **30**
-- Full Buy: **20**
-- Level ekstrem / referensi SL RSI: **85** dan **15**
+## Pengaturan
+- Instrumen XAUUSD: `OANDA:XAUUSD` (emas spot)
+- Instrumen NASDAQ: `CME_MINI:NQ1!` (E-mini Nasdaq-100 futures)
+- Timeframe: M5, M15, M30, H1
+- Indikator: Relative Strength Index (RSI)
+- Periode: 8
+- Sumber harga indikator: Close
+- Level referensi: 15, 20, 30, 50, 70, 80, 85
 
-RSI dihitung dengan smoothing Wilder. Klasifikasi: RSI >= 80 Full Sell; 70–<80 R Sell; >30–<70 Sideway; >20–30 R Buy; <=20 Full Buy.
+## Isi paket
+- `index.html` — aplikasi utama
+- `README.md` — dokumentasi
+- `GITHUB_PAGES_ID.md` — panduan upload GitHub Pages
+- `.nojekyll` — file konfigurasi GitHub Pages
 
-## Menjalankan
-Tidak perlu Python, API key, atau build:
-1. Buka `index.html` di browser untuk uji tampilan. Pengambilan data membutuhkan koneksi internet.
-2. Upload seluruh isi folder ini ke repository GitHub.
-3. Aktifkan GitHub Pages (panduan ada di `GITHUB_PAGES_ID.md`).
+## Upload / update ke repository GitHub
+Repository yang digunakan: `yugeng88/rsi-xauusd-nasdaq`.
 
-## Catatan penting tentang data
-Aplikasi meminta candle publik Yahoo Finance:
-- `GC=F` untuk emas berjangka sebagai pendekatan XAUUSD.
-- `NQ=F` untuk futures Nasdaq-100 sebagai pendekatan NASDAQ.
+1. Ekstrak ZIP.
+2. Buka repository GitHub.
+3. Pilih **Add file → Upload files**.
+4. Upload dan timpa `index.html`, `README.md`, `GITHUB_PAGES_ID.md`, dan `.nojekyll`.
+5. Tekan **Commit changes**.
+6. Buka **Settings → Pages**. Pastikan source `Deploy from a branch`, branch `main`, folder `/(root)`.
+7. Tunggu deployment, lalu buka `https://yugeng88.github.io/rsi-xauusd-nasdaq/`.
 
-Keduanya **bukan** harga CFD broker yang persis sama. Simbol, spread, jam perdagangan, dan harga dapat berbeda. Yahoo Finance juga dapat membatasi permintaan atau mengubah endpoint. Jika gagal dimuat, coba Refresh atau gunakan sumber data broker sendiri.
+## Tentang data
+Dashboard ini memakai widget chart publik TradingView. Ia tidak mengambil atau menyalin sinyal transaksi, entry, SL, TP, atau data privat dari aplikasi `sinyal-xauusd.vercel.app`. Chart memerlukan koneksi internet dan dapat gagal dimuat jika layanan TradingView diblokir oleh jaringan/peramban. Harga dapat berbeda dari feed broker.
 
-## Disclaimer
-Aplikasi ini hanya alat edukasi dan pembacaan indikator. Sinyal RSI bukan rekomendasi transaksi, bukan prediksi pasti, dan tidak menjamin hasil. Level 15/85 adalah level RSI, bukan harga stop-loss. Uji dan verifikasi data terlebih dahulu.
+RSI adalah indikator edukatif, bukan prediksi pasti atau rekomendasi transaksi. Level 15/85 adalah level RSI, bukan harga stop-loss.
