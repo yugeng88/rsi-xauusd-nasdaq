@@ -31,3 +31,14 @@ Widget RSI bawaan TradingView ditampilkan sebagai referensi. Untuk memastikan se
 
 ## Disclaimer
 Indikator bersifat alat bantu analisis, bukan rekomendasi transaksi atau jaminan profit. Periksa data, sesi, spread, dan karakteristik simbol broker sebelum mengambil keputusan.
+
+
+## Entry, Stop Loss, Take Profit
+Pine Script versi terbaru menambahkan:
+- Entry: harga penutupan candle saat sinyal BUY/SELL terkonfirmasi.
+- Stop Loss: berbasis ATR(14) × 1,5 (dapat diubah di pengaturan indikator).
+- Take Profit: target 2R dari jarak Entry ke Stop Loss (dapat diubah).
+- Garis Entry, SL, dan TP serta tabel harga pada chart.
+- Alert dinamis berisi Entry, SL, dan TP. Saat membuat alert, pilih indikator ini lalu kondisi **Any alert() function call**.
+
+Catatan: ATR dan rasio risiko/imbalan tersebut adalah nilai awal contoh, bukan jaminan level terbaik. Sesuaikan dengan volatilitas instrumen, spread, dan manajemen risiko akun. Garis menunjukkan rencana trade terbaru; script ini bukan strategy tester dan tidak menutup posisi secara otomatis.

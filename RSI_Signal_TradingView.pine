@@ -1,7 +1,7 @@
 //@version=6
-indicator("RSI 8 — BUY / SELL / SIDEWAY (XAUUSD & NASDAQ)", overlay=false, max_labels_count=500)
+indicator("RSI 8 — BUY / SELL / SIDEWAY + ENTRY SL TP", overlay=true, max_labels_count=500)
 
-// Pengaturan utama
+// RSI settings
 rsiLength = input.int(8, "RSI Period", minval=1)
 src = input.source(close, "Apply to")
 level15 = input.float(15, "Level 15")
@@ -12,40 +12,92 @@ level70 = input.float(70, "Level 70")
 level80 = input.float(80, "Level 80")
 level85 = input.float(85, "Level 85")
 
-r = ta.rsi(src, rsiLength)
+// Risk-management settings (editable)
+atrLength = input.int(14, "ATR Period for SL", minval=1)
+slAtrMult = input.float(1.5, "Stop Loss distance (ATR x)", minval=0.1, step=0.1)
+riskReward = input.float(2.0, "Take Profit risk/reward (R)", minval=0.1, step=0.1)
+showTradeLevels = input.bool(true, "Show latest Entry / SL / TP")
 
-// Status sederhana: BUY di bawah/tepat 30, SELL di atas/tepat 70, selainnya SIDEWAY.
+r = ta.rsi(src, rsiLength)
+atr = ta.atr(atrLength)
+
+// Status: BUY at/below 30, SELL at/above 70, otherwise SIDEWAY.
 state = r <= level30 ? 1 : r >= level70 ? -1 : 0
 stateText = state == 1 ? "BUY" : state == -1 ? "SELL" : "SIDEWAY"
 
-// Perubahan status hanya dipastikan pada candle yang sudah tutup.
+// Signal confirmed at candle close; one signal when entering a new state.
 confirmed = barstate.isconfirmed
 buySignal = confirmed and state == 1 and state[1] != 1
 sellSignal = confirmed and state == -1 and state[1] != -1
 sidewaySignal = confirmed and state == 0 and state[1] != 0
 
-plot(r, "RSI 8", color=color.aqua, linewidth=2)
-hline(level15, "15", color=color.new(color.green, 25))
-hline(level20, "20", color=color.new(color.green, 10))
-hline(level30, "30", color=color.green)
-hline(level50, "50", color=color.gray)
-hline(level70, "70", color=color.red)
-hline(level80, "80", color=color.new(color.red, 10))
-hline(level85, "85", color=color.new(color.red, 25))
+// Entry is signal candle close. SL uses ATR; TP is a configurable R multiple.
+var float entryPrice = na
+var float stopPrice = na
+var float targetPrice = na
+var int tradeDirection = 0
+var int signalBar = na
 
-plotshape(buySignal, title="BUY", text="BUY", style=shape.labelup, location=location.bottom, color=color.green, textcolor=color.white, size=size.tiny)
-plotshape(sellSignal, title="SELL", text="SELL", style=shape.labeldown, location=location.top, color=color.red, textcolor=color.white, size=size.tiny)
-plotshape(sidewaySignal, title="SIDEWAY", text="SIDEWAY", style=shape.labelup, location=location.bottom, color=color.gray, textcolor=color.white, size=size.tiny)
+if buySignal and not na(atr)
+    entryPrice := close
+    stopPrice := entryPrice - atr * slAtrMult
+    targetPrice := entryPrice + (entryPrice - stopPrice) * riskReward
+    tradeDirection := 1
+    signalBar := bar_index
+    label.new(bar_index, low, "BUY\nEntry: " + str.tostring(entryPrice, format.mintick) +
+      "\nSL: " + str.tostring(stopPrice, format.mintick) +
+      "\nTP: " + str.tostring(targetPrice, format.mintick),
+      style=label.style_label_up, color=color.green, textcolor=color.white)
 
-var table panel = table.new(position.top_right, 2, 3, border_width=1)
+if sellSignal and not na(atr)
+    entryPrice := close
+    stopPrice := entryPrice + atr * slAtrMult
+    targetPrice := entryPrice - (stopPrice - entryPrice) * riskReward
+    tradeDirection := -1
+    signalBar := bar_index
+    label.new(bar_index, high, "SELL\nEntry: " + str.tostring(entryPrice, format.mintick) +
+      "\nSL: " + str.tostring(stopPrice, format.mintick) +
+      "\nTP: " + str.tostring(targetPrice, format.mintick),
+      style=label.style_label_down, color=color.red, textcolor=color.white)
+
+if sidewaySignal
+    label.new(bar_index, close, "SIDEWAY", style=label.style_label_left,
+      color=color.gray, textcolor=color.white)
+
+// Draw latest trade plan levels
+plot(showTradeLevels ? entryPrice : na, "Latest Entry", color=color.blue, linewidth=2, style=plot.style_linebr)
+plot(showTradeLevels ? stopPrice : na, "Latest Stop Loss", color=color.red, linewidth=2, style=plot.style_linebr)
+plot(showTradeLevels ? targetPrice : na, "Latest Take Profit", color=color.lime, linewidth=2, style=plot.style_linebr)
+
+// Compact RSI/status panel
+var table panel = table.new(position.top_right, 2, 6, border_width=1)
 if barstate.islast
     bg = state == 1 ? color.new(color.green, 10) : state == -1 ? color.new(color.red, 10) : color.new(color.gray, 25)
     table.cell(panel, 0, 0, "RSI 8", text_color=color.white, bgcolor=color.new(color.blue, 55))
     table.cell(panel, 1, 0, str.tostring(r, "#.00"), text_color=color.white, bgcolor=color.new(color.blue, 55))
-    table.cell(panel, 0, 1, "SINYAL", text_color=color.white, bgcolor=color.new(color.black, 0))
+    table.cell(panel, 0, 1, "SIGNAL", text_color=color.white, bgcolor=color.black)
     table.cell(panel, 1, 1, stateText, text_color=color.white, bgcolor=bg)
-    table.cell(panel, 0, 2, "LEVEL", text_color=color.white, bgcolor=color.new(color.black, 0))
-    table.cell(panel, 1, 2, state == 1 ? "≤ 30" : state == -1 ? "≥ 70" : "30–70", text_color=color.white, bgcolor=bg)
+    table.cell(panel, 0, 2, "ENTRY", text_color=color.white, bgcolor=color.black)
+    table.cell(panel, 1, 2, na(entryPrice) ? "—" : str.tostring(entryPrice, format.mintick), text_color=color.white)
+    table.cell(panel, 0, 3, "STOP LOSS", text_color=color.white, bgcolor=color.black)
+    table.cell(panel, 1, 3, na(stopPrice) ? "—" : str.tostring(stopPrice, format.mintick), text_color=color.white)
+    table.cell(panel, 0, 4, "TAKE PROFIT", text_color=color.white, bgcolor=color.black)
+    table.cell(panel, 1, 4, na(targetPrice) ? "—" : str.tostring(targetPrice, format.mintick), text_color=color.white)
+    table.cell(panel, 0, 5, "R:R", text_color=color.white, bgcolor=color.black)
+    table.cell(panel, 1, 5, "1:" + str.tostring(riskReward, "#.##"), text_color=color.white)
+
+// Alerts: create TradingView alert using "Any alert() function call" to receive prices.
+if buySignal and not na(atr)
+    alert("RSI BUY | " + syminfo.ticker + " | TF " + timeframe.period +
+      " | Entry " + str.tostring(entryPrice, format.mintick) +
+      " | SL " + str.tostring(stopPrice, format.mintick) +
+      " | TP " + str.tostring(targetPrice, format.mintick), alert.freq_once_per_bar_close)
+
+if sellSignal and not na(atr)
+    alert("RSI SELL | " + syminfo.ticker + " | TF " + timeframe.period +
+      " | Entry " + str.tostring(entryPrice, format.mintick) +
+      " | SL " + str.tostring(stopPrice, format.mintick) +
+      " | TP " + str.tostring(targetPrice, format.mintick), alert.freq_once_per_bar_close)
 
 alertcondition(buySignal, title="RSI BUY", message="RSI 8 BUY | {{ticker}} | TF {{interval}} | Close {{close}}")
 alertcondition(sellSignal, title="RSI SELL", message="RSI 8 SELL | {{ticker}} | TF {{interval}} | Close {{close}}")
