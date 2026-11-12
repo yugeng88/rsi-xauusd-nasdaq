@@ -4,121 +4,192 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0b1020">
-<title>RSI Dashboard — XAUUSD & NASDAQ</title>
+<title>RSI Signal — XAUUSD & NASDAQ</title>
 <style>
-:root{color-scheme:dark;--bg:#0b1020;--panel:#141c30;--panel2:#0e1628;--line:#26334f;--muted:#9aa8c4;--text:#f2f5ff;--blue:#67a7ff;--gold:#f3c969}
+:root{color-scheme:dark;--bg:#0b1020;--panel:#141c30;--p2:#0e1628;--line:#26334f;--muted:#9aa8c4;--text:#f2f5ff;--blue:#67a7ff;--buy:#2ecc71;--sell:#ff5c6c}
 *{box-sizing:border-box}
-body{margin:0;background:radial-gradient(900px 420px at 80% -10%,#26355b66,transparent),var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif;padding:calc(14px + env(safe-area-inset-top)) 12px calc(28px + env(safe-area-inset-bottom))}
-main{max-width:920px;margin:auto;display:grid;gap:13px}
-header,.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-h1{font-size:21px;line-height:1.2;margin:0}h2{font-size:15px;margin:0 0 12px}
-.sub,.muted{color:var(--muted)}.sub{font-size:12px;margin-top:5px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px}
-.tabs,.timeframes{display:flex;gap:8px;overflow-x:auto}
-button,.linkbtn{font:inherit;background:#1a2540;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-weight:700;cursor:pointer;text-decoration:none;white-space:nowrap}
-.tabs button{flex:1}.tabs button.active,.timeframes button.active{color:#fff;border-color:var(--blue);background:#20365c}
-.chart-wrap{height:min(66vh,620px);min-height:420px;overflow:hidden;border-radius:12px;background:#0e1628}
-.tradingview-widget-container,.tradingview-widget-container__widget{height:100%;width:100%}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-.metric{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:12px;min-width:0}
-.metric small{display:block;color:var(--muted);font-size:12px}.metric b{display:block;font-size:16px;margin-top:5px;overflow-wrap:anywhere}
-.levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.level{display:flex;justify-content:space-between;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.level b{font-variant-numeric:tabular-nums}
-.notice{background:#282315;border:1px solid #6c5723;color:#f5d88c;padding:12px;border-radius:11px;font-size:12px;line-height:1.6}
-.note{font-size:12px;line-height:1.6;color:var(--muted)}
-a{color:#83b7ff}.footer{text-align:center;color:var(--muted);font-size:11px;line-height:1.6}
-.actions{display:flex;gap:8px;flex-wrap:wrap}.actions a{flex:1;text-align:center;min-width:145px}
-.status{font-size:12px;color:var(--muted)}
-@media(min-width:650px){body{padding:26px}.grid,.levels{grid-template-columns:repeat(4,minmax(0,1fr))}}
-@media(max-width:380px){h1{font-size:18px}.card{padding:12px}.chart-wrap{min-height:390px}}
+body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif;padding:calc(14px + env(safe-area-inset-top)) 12px calc(28px + env(safe-area-inset-bottom))}
+main{max-width:760px;margin:auto;display:grid;gap:12px}
+h1{font-size:20px;margin:0}h2{font-size:14px;margin:0 0 10px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}
+.tabs{display:flex;gap:8px}.tabs button{flex:1}
+button,input,select{font:inherit;background:#1a2540;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-weight:700}
+button{cursor:pointer}button.on{color:#fff;border-color:var(--blue);background:#20365c}
+input,select{width:100%;font-weight:400;color:var(--text)}
+.muted{color:var(--muted);font-size:12px}
+.big{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.rsi{font-size:38px;font-weight:800;font-variant-numeric:tabular-nums}
+.badge{padding:8px 14px;border-radius:999px;font-weight:800;font-size:14px;background:#2a3350}
+.badge.buy{background:var(--buy);color:#04210f}.badge.sell{background:var(--sell);color:#2a0409}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.m{background:var(--p2);border:1px solid var(--line);border-radius:10px;padding:10px}.m small{display:block;color:var(--muted);font-size:11px}.m b{font-variant-numeric:tabular-nums}
+canvas{width:100%;height:380px;display:block;border-radius:10px;background:var(--p2)}
+.sig{display:flex;justify-content:space-between;gap:8px;padding:10px;border-radius:10px;background:var(--p2);border:1px solid var(--line);margin-bottom:6px;font-size:13px}
+.sig b.buy{color:var(--buy)}.sig b.sell{color:var(--sell)}
+.sig small{color:var(--muted);display:block}
+.msg{background:#282315;border:1px solid #6c5723;color:#f5d88c;padding:10px;border-radius:10px;font-size:12px;line-height:1.5}
+.f{display:grid;gap:8px}label{font-size:12px;color:var(--muted);display:grid;gap:4px}
+@media(min-width:600px){.grid{grid-template-columns:repeat(4,1fr)}}
 </style>
 </head>
 <body>
 <main>
-<header>
- <div><h1>RSI Dashboard</h1><div class="sub">XAUUSD · NASDAQ · RSI(8) · Close</div></div>
- <button id="reload">↻ Muat ulang</button>
-</header>
-
-<nav class="tabs" aria-label="Pilih instrumen">
- <button class="active" data-symbol="XAUUSD">XAUUSD</button>
- <button data-symbol="NASDAQ">NASDAQ</button>
-</nav>
-<nav class="timeframes" aria-label="Pilih timeframe">
- <button class="active" data-tf="5">M5</button><button data-tf="15">M15</button>
- <button data-tf="30">M30</button><button data-tf="60">H1</button>
-</nav>
+<div class="row"><div><h1>RSI Signal</h1><div class="muted">RSI(8) · Close · BUY ≤30 · SELL ≥70</div><div class="muted"><b id="ver" style="color:#67a7ff"></b></div></div><button id="reload">↻</button></div>
+<div class="tabs" id="symTabs"><button data-s="XAUUSD" class="on">XAUUSD</button><button data-s="NASDAQ">NASDAQ</button></div>
+<div class="tabs" id="tfTabs"><button data-t="5" class="on">M5</button><button data-t="15">M15</button><button data-t="30">M30</button><button data-t="60">H1</button></div>
+<div id="err" class="msg" hidden></div>
 
 <section class="card">
- <div class="toolbar">
-  <div><b id="instrument-name">OANDA:XAUUSD</b><div class="status" id="chart-status">Menghubungkan ke TradingView…</div></div>
-  <span class="muted">Chart TradingView</span>
- </div>
- <div class="chart-wrap" style="margin-top:12px">
-  <div id="tv-chart" class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div>
- </div>
- <p class="note">Gunakan indikator bawaan Relative Strength Index dengan Length 8 dan Source Close, atau pasang indikator khusus dari file RSI_Signal_TradingView.pine yang disertakan.</p>
-</section>
-
-<section class="card">
- <h2>Konfigurasi aktif</h2>
+ <div class="big"><div><div class="muted" id="sub">—</div><div class="rsi" id="rsiNow">--</div></div><div class="badge" id="status">—</div></div>
  <div class="grid">
-  <div class="metric"><small>Simbol NASDAQ</small><b>FX:NAS100</b></div>
-  <div class="metric"><small>Simbol XAUUSD</small><b>OANDA:XAUUSD</b></div>
-  <div class="metric"><small>RSI</small><b>8 · Close</b></div>
-  <div class="metric"><small>Timeframe</small><b id="tf-label">M5</b></div>
+  <div class="m"><small>Harga</small><b id="price">—</b></div>
+  <div class="m"><small>Entry</small><b id="entry">—</b></div>
+  <div class="m"><small>Stop Loss</small><b id="sl">—</b></div>
+  <div class="m"><small>Take Profit</small><b id="tp">—</b></div>
  </div>
+ <div class="muted" id="lastSig" style="margin-top:10px">—</div>
 </section>
+
+<section class="card"><canvas id="cv"></canvas><div class="muted" style="margin-top:8px" id="upd">—</div></section>
+
+<section class="card"><h2>Riwayat sinyal</h2><div id="hist"><div class="muted">Memuat…</div></div></section>
 
 <section class="card">
- <h2>Level RSI</h2>
- <div class="levels">
-  <div class="level"><span>Ekstrem bawah</span><b>15</b></div>
-  <div class="level"><span>Batas bawah kuat</span><b>20</b></div>
-  <div class="level"><span>Area BUY</span><b>30</b></div>
-  <div class="level"><span>Netral</span><b>50</b></div>
-  <div class="level"><span>Area SELL</span><b>70</b></div>
-  <div class="level"><span>Batas atas kuat</span><b>80</b></div>
-  <div class="level"><span>Ekstrem atas</span><b>85</b></div>
+ <h2>Pengaturan</h2>
+ <div class="f">
+  <label>Sumber data
+   <select id="provider"><option value="binance">Binance Futures (tanpa API key)</option><option value="td">Twelve Data (perlu API key gratis)</option></select></label>
+  <label>Twelve Data API key<input id="apikey" placeholder="tempel API key" autocomplete="off"></label>
+  <label>Simbol XAUUSD<input id="symX"></label>
+  <label>Simbol NASDAQ<input id="symN"></label>
+  <label>Sinyal<select id="live"><option value="0">Saat candle tutup (tidak repaint)</option><option value="1">Langsung saat RSI menyentuh level (live)</option></select></label>
+  <label>ATR × untuk Stop Loss<input id="atrm" type="number" step="0.1" min="0.1"></label>
+  <label>Take Profit (R)<input id="rr" type="number" step="0.1" min="0.1"></label>
+  <button id="save" class="on">Simpan & muat ulang</button>
+  <button id="notif">Aktifkan notifikasi & suara</button>
  </div>
 </section>
-
-<section class="card">
- <h2>Sinyal dan riwayat</h2>
- <p class="note">Indikator Pine Script yang disertakan menghasilkan status BUY, SELL, dan SIDEWAY serta menandai perubahan sinyal pada chart TradingView. Riwayat marker tersimpan pada chart sesuai data historis yang dimuat TradingView.</p>
- <div class="actions">
-  <a class="linkbtn" href="RSI_Signal_TradingView.pine" download>Unduh Pine Script</a>
-  <a class="linkbtn" id="open-tv" href="https://www.tradingview.com/chart/?symbol=OANDA%3AXAUUSD" target="_blank" rel="noopener">Buka di TradingView ↗</a>
- </div>
-</section>
-
-<div class="notice"><b>Batasan penting:</b> GitHub Pages adalah hosting statis. Widget chart TradingView tidak menyediakan akses bagi halaman ini untuk membaca nilai RSI, menerima alert, atau mengambil riwayat sinyal dari akun TradingView. Karena itu, sinyal otomatis berjalan di Pine Script pada TradingView, bukan dikirim kembali ke dashboard web ini. Agar riwayat dan alert aktif, tambahkan script ke chart lalu buat Alert di TradingView.</div>
-<div class="footer">Alat bantu analisis teknikal, bukan rekomendasi transaksi. Sinyal tidak menjamin hasil. Pastikan simbol, sesi, dan data sesuai kebutuhan sebelum mengambil keputusan.</div>
+<div class="muted" style="text-align:center">RSI Signal App <span id="ver2"></span> · Alat bantu analisis, bukan rekomendasi transaksi. Sinyal tidak menjamin hasil.</div>
 </main>
 <script>
 (()=>{
- const instruments={
-  XAUUSD:{ticker:"OANDA:XAUUSD",label:"OANDA:XAUUSD"},
-  NASDAQ:{ticker:"FX:NAS100",label:"FX:NAS100 · US 100 Index"}
- };
- let symbol="XAUUSD",tf="5",timer;
- const $=id=>document.getElementById(id);
- function loadChart(){
-  const host=$("tv-chart");host.innerHTML='<div class="tradingview-widget-container__widget"></div>';
-  $("instrument-name").textContent=instruments[symbol].label;
-  $("tf-label").textContent=({5:"M5",15:"M15",30:"M30",60:"H1"})[tf];
-  $("chart-status").textContent="Menghubungkan ke TradingView…";
-  const cfg={autosize:true,symbol:instruments[symbol].ticker,interval:tf,timezone:"Asia/Jakarta",theme:"dark",style:"1",locale:"id",enable_publishing:false,allow_symbol_change:false,hide_top_toolbar:false,hide_legend:false,save_image:false,calendar:false,studies:["STD;RSI"],studies_overrides:{"relative strength index.length":8},support_host:"https://www.tradingview.com"};
-  const s=document.createElement("script");s.src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";s.async=true;s.type="text/javascript";s.innerHTML=JSON.stringify(cfg);host.appendChild(s);
-  clearTimeout(timer);timer=setTimeout(()=>$("chart-status").textContent="Jika chart belum muncul, periksa koneksi atau buka langsung di TradingView.",10000);
-  s.onload=()=>{$("chart-status").textContent="Chart TradingView · RSI bawaan ditampilkan";clearTimeout(timer)};
-  s.onerror=()=>{$("chart-status").textContent="Chart gagal dimuat. Coba muat ulang atau buka TradingView."};
-  $("open-tv").href="https://www.tradingview.com/chart/?symbol="+encodeURIComponent(instruments[symbol].ticker);
+const $=id=>document.getElementById(id);
+const VERSION="v4",BUILD="12 Nov 2026";$("ver").textContent="Versi "+VERSION+" · "+BUILD;$("ver2").textContent=VERSION;document.title="RSI Signal "+VERSION;
+const N=8,BUY=[30,20,15],SELL=[70,80,85],TAG={30:"",20:"+",15:"++",70:"",80:"+",85:"++"};
+const def={provider:"binance",apikey:"",symX:"XAUUSDT",symN:"",live:"0",atrm:"1.5",rr:"2"};
+let cfg=Object.assign({},def);try{Object.assign(cfg,JSON.parse(localStorage.getItem("rsiCfg")||"{}"))}catch(e){}
+// Simbol bawaan menyesuaikan sumber data
+const defSym={binance:{X:"XAUUSDT",N:""},td:{X:"XAU/USD",N:"NDX"}};
+let sym="XAUUSD",tf="5",data=null,lastKey=null,timer;
+const fmt=(v,d=2)=>v==null||isNaN(v)?"—":v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+const tfName={5:"M5",15:"M15",30:"M30",60:"H1"};
+
+function rsi(c,n){const o=Array(c.length).fill(null);if(c.length<=n)return o;let g=0,l=0;
+ for(let i=1;i<=n;i++){const d=c[i]-c[i-1];d>0?g+=d:l-=d}g/=n;l/=n;
+ o[n]=l==0?100:100-100/(1+g/l);
+ for(let i=n+1;i<c.length;i++){const d=c[i]-c[i-1];g=(g*(n-1)+Math.max(d,0))/n;l=(l*(n-1)+Math.max(-d,0))/n;o[i]=l==0?100:100-100/(1+g/l)}return o}
+function atr(k,n=14){const o=Array(k.length).fill(null);let a=null;
+ for(let i=1;i<k.length;i++){const tr=Math.max(k[i].h-k[i].l,Math.abs(k[i].h-k[i-1].c),Math.abs(k[i].l-k[i-1].c));
+  if(i<=n){a=(a||0)+tr;if(i==n){a/=n;o[i]=a}}else{a=(a*(n-1)+tr)/n;o[i]=a}}return o}
+
+async function load(){
+ const code=sym=="XAUUSD"?cfg.symX:cfg.symN;
+ if(!code)throw new Error(sym+" tidak tersedia di sumber data ini. Isi simbol di Pengaturan, atau pilih Twelve Data (simbol NDX).");
+ if(cfg.provider=="binance"){
+  const r=await fetch(`https://fapi.binance.com/fapi/v1/klines?symbol=${encodeURIComponent(code)}&interval=${tf=="60"?"1h":tf+"m"}&limit=500`);
+  if(!r.ok)throw new Error("Binance: simbol '"+code+"' tidak ditemukan atau akses ditolak ("+r.status+").");
+  return (await r.json()).map(x=>({t:x[0],o:+x[1],h:+x[2],l:+x[3],c:+x[4]}));
  }
- document.querySelectorAll("[data-symbol]").forEach(b=>b.addEventListener("click",()=>{symbol=b.dataset.symbol;document.querySelectorAll("[data-symbol]").forEach(x=>x.classList.toggle("active",x===b));loadChart()}));
- document.querySelectorAll("[data-tf]").forEach(b=>b.addEventListener("click",()=>{tf=b.dataset.tf;document.querySelectorAll("[data-tf]").forEach(x=>x.classList.toggle("active",x===b));loadChart()}));
- $("reload").addEventListener("click",loadChart);loadChart();
+ if(!cfg.apikey)throw new Error("Isi Twelve Data API key di Pengaturan.");
+ const iv={5:"5min",15:"15min",30:"30min",60:"1h"}[tf];
+ const r=await fetch(`https://api.twelvedata.com/time_series?symbol=${encodeURIComponent(code)}&interval=${iv}&outputsize=500&timezone=UTC&apikey=${encodeURIComponent(cfg.apikey)}`);
+ const j=await r.json();
+ if(j.status=="error"||!j.values)throw new Error("Twelve Data: "+(j.message||"data kosong"));
+ return j.values.reverse().map(x=>({t:Date.parse(x.datetime.replace(" ","T")+"Z"),o:+x.open,h:+x.high,l:+x.low,c:+x.close}));
+}
+
+function analyze(k){
+ const c=k.map(x=>x.c),r=rsi(c,N),a=atr(k),sig=[];
+ const end=cfg.live=="1"?k.length-1:k.length-2; // candle terakhir belum tutup
+ for(let i=N+1;i<=end;i++){
+  for(const L of BUY)if(r[i]<=L&&r[i-1]>L)sig.push(mk(i,"BUY",L));
+  for(const L of SELL)if(r[i]>=L&&r[i-1]<L)sig.push(mk(i,"SELL",L));
+ }
+ function mk(i,type,L){const s={i,t:k[i].t,type,L,rsi:r[i],price:k[i].c,main:L==30||L==70};
+  if(s.main&&a[i]){const d=a[i]*+cfg.atrm,dir=type=="BUY"?1:-1;s.entry=k[i].c;s.sl=s.entry-dir*d;s.tp=s.entry+dir*d*+cfg.rr}return s}
+ return{k,r,a,sig};
+}
+
+const tm=t=>new Date(t).toLocaleString("id-ID",{timeZone:"Asia/Jakarta",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+function render(d){
+ const{k,r,sig}=d,last=k.length-1,rv=r[last],p=k[last].c;
+ $("sub").textContent=sym+" · "+tfName[tf];
+ $("rsiNow").textContent=fmt(rv,1);$("price").textContent=fmt(p);
+ const st=rv<=30?"buy":rv>=70?"sell":"";
+ $("status").className="badge "+st;$("status").textContent=st=="buy"?"BUY zone":st=="sell"?"SELL zone":"SIDEWAY";
+ const m=[...sig].reverse().find(s=>s.main);
+ $("entry").textContent=fmt(m&&m.entry);$("sl").textContent=fmt(m&&m.sl);$("tp").textContent=fmt(m&&m.tp);
+ $("lastSig").textContent=m?`Sinyal utama terakhir: ${m.type} · RSI ${fmt(m.rsi,1)} · ${tm(m.t)}`:"Belum ada sinyal pada data yang dimuat.";
+ $("upd").textContent="Diperbarui "+new Date().toLocaleTimeString("id-ID",{timeZone:"Asia/Jakarta"})+" WIB · candle terakhir "+(cfg.live=="1"?"ikut dihitung (live)":"belum dihitung sampai tutup");
+ const h=[...sig].reverse().slice(0,40);
+ $("hist").innerHTML=h.length?h.map(s=>`<div class="sig"><div><b class="${s.type.toLowerCase()}">${s.type}${TAG[s.L]}</b> · RSI ${fmt(s.rsi,1)} <small>level ${s.L} · ${tm(s.t)}</small></div><div style="text-align:right">${fmt(s.price)}${s.entry?`<small>SL ${fmt(s.sl)} · TP ${fmt(s.tp)}</small>`:""}</div></div>`).join(""):'<div class="muted">Belum ada sinyal.</div>';
+ draw(d);notify(sig);
+}
+
+function draw({k,r,sig}){
+ const cv=$("cv"),dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;
+ const x=cv.getContext("2d");x.scale(dpr,dpr);x.clearRect(0,0,W,H);
+ const V=Math.min(120,k.length),s0=k.length-V,pad=44,pw=W-pad-6,bw=pw/V;
+ const pH=H*.58,rT=pH+16,rH=H-rT-14,X=i=>pad+(i-s0+.5)*bw;
+ let lo=Infinity,hi=-Infinity;for(let i=s0;i<k.length;i++){lo=Math.min(lo,k[i].l);hi=Math.max(hi,k[i].h)}
+ const e=(hi-lo)*.06;lo-=e;hi+=e;const Y=v=>8+(hi-v)/(hi-lo)*(pH-12);
+ x.font="10px system-ui";x.fillStyle="#9aa8c4";x.strokeStyle="#26334f";x.lineWidth=1;
+ for(let g=0;g<=3;g++){const v=lo+(hi-lo)*g/3,y=Y(v);x.beginPath();x.moveTo(pad,y);x.lineTo(W,y);x.stroke();x.fillText(fmt(v,v>1000?0:2),2,y+3)}
+ for(let i=s0;i<k.length;i++){const up=k[i].c>=k[i].o;x.strokeStyle=x.fillStyle=up?"#2ecc71":"#ff5c6c";
+  x.beginPath();x.moveTo(X(i),Y(k[i].h));x.lineTo(X(i),Y(k[i].l));x.stroke();
+  const y1=Y(k[i].o),y2=Y(k[i].c);x.fillRect(X(i)-bw*.35,Math.min(y1,y2),bw*.7,Math.max(1,Math.abs(y1-y2)))}
+ for(const s of sig){if(s.i<s0)continue;const b=s.type=="BUY",cx=X(s.i),cy=b?Y(k[s.i].l)+10:Y(k[s.i].h)-10;
+  x.fillStyle=b?"#2ecc71":"#ff5c6c";x.beginPath();
+  if(b){x.moveTo(cx,cy-6);x.lineTo(cx-5,cy+4);x.lineTo(cx+5,cy+4)}else{x.moveTo(cx,cy+6);x.lineTo(cx-5,cy-4);x.lineTo(cx+5,cy-4)}
+  x.fill()}
+ // RSI panel
+ const RY=v=>rT+(100-v)/100*rH;x.font="10px system-ui";
+ x.fillStyle="#2ecc7122";x.fillRect(pad,RY(30),pw+6,RY(0)-RY(30));x.fillStyle="#ff5c6c22";x.fillRect(pad,rT,pw+6,RY(70)-rT);
+ for(const L of [15,20,30,50,70,80,85]){x.strokeStyle=L==30||L==70?"#67a7ff":"#26334f";x.setLineDash(L==50?[2,3]:[]);
+  x.beginPath();x.moveTo(pad,RY(L));x.lineTo(W,RY(L));x.stroke();x.fillStyle="#9aa8c4";x.fillText(L,pad-22,RY(L)+3)}
+ x.setLineDash([]);x.strokeStyle="#f3c969";x.lineWidth=1.6;x.beginPath();let f=true;
+ for(let i=s0;i<k.length;i++){if(r[i]==null)continue;f?x.moveTo(X(i),RY(r[i])):x.lineTo(X(i),RY(r[i]));f=false}x.stroke();
+ for(const s of sig){if(s.i<s0)continue;x.fillStyle=s.type=="BUY"?"#2ecc71":"#ff5c6c";x.beginPath();x.arc(X(s.i),RY(s.rsi),3.5,0,7);x.fill()}
+}
+
+function notify(sig){
+ const m=sig[sig.length-1];if(!m)return;const key=sym+tf+m.t+m.L;
+ if(lastKey===null){lastKey=key;return}if(key===lastKey)return;lastKey=key;
+ const txt=`${m.type}${TAG[m.L]} ${sym} ${tfName[tf]} · RSI ${fmt(m.rsi,1)} @ ${fmt(m.price)}`;
+ try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+ try{const a=new (window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator();o.frequency.value=m.type=="BUY"?880:440;o.connect(a.destination);o.start();o.stop(a.currentTime+.35)}catch(e){}
+ try{if(Notification.permission=="granted")new Notification("Sinyal RSI",{body:txt})}catch(e){}
+}
+
+async function refresh(){
+ $("err").hidden=true;
+ try{const k=await load();if(k.length<N+3)throw new Error("Data terlalu sedikit.");data=analyze(k);render(data)}
+ catch(e){$("err").hidden=false;$("err").textContent=(e.message=="Failed to fetch"?"Gagal mengambil data (koneksi/CORS/blokir). Coba sumber data lain di Pengaturan.":e.message);
+  $("hist").innerHTML='<div class="muted">—</div>'}
+ clearTimeout(timer);timer=setTimeout(refresh,cfg.provider=="td"?120000:15000);
+}
+
+document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{sym=b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.classList.toggle("on",x==b));lastKey=null;refresh()});
+document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{tf=b.dataset.t;document.querySelectorAll("[data-t]").forEach(x=>x.classList.toggle("on",x==b));lastKey=null;refresh()});
+$("reload").onclick=refresh;
+function fill(){$("provider").value=cfg.provider;$("apikey").value=cfg.apikey;$("symX").value=cfg.symX;$("symN").value=cfg.symN;$("live").value=cfg.live;$("atrm").value=cfg.atrm;$("rr").value=cfg.rr}
+$("provider").onchange=()=>{const d=defSym[$("provider").value];$("symX").value=d.X;$("symN").value=d.N};
+$("save").onclick=()=>{cfg={provider:$("provider").value,apikey:$("apikey").value.trim(),symX:$("symX").value.trim(),symN:$("symN").value.trim(),live:$("live").value,atrm:$("atrm").value||"1.5",rr:$("rr").value||"2"};
+ try{localStorage.setItem("rsiCfg",JSON.stringify(cfg))}catch(e){}lastKey=null;refresh()};
+$("notif").onclick=async()=>{try{const p=await Notification.requestPermission();$("notif").textContent=p=="granted"?"Notifikasi aktif ✓":"Notifikasi ditolak (suara & getar tetap jalan)"}catch(e){$("notif").textContent="Browser tidak mendukung notifikasi"}};
+if(!localStorage.getItem("rsiCfg")){cfg.symX=defSym.binance.X;cfg.symN=defSym.binance.N}
+fill();addEventListener("resize",()=>data&&draw(data));refresh();
 })();
 </script>
 </body>
