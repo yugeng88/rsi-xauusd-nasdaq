@@ -1,4 +1,4 @@
-# RSI Signal App v6 — XAUUSD & NASDAQ
+# RSI Signal App v7 — XAUUSD & NASDAQ
 
 Aplikasi web mandiri (tanpa TradingView). RSI dihitung langsung di browser (RSI 8, Close, metode Wilder).
 
@@ -23,3 +23,7 @@ Alat bantu analisis, bukan rekomendasi transaksi.
 ## v6 — Data dari MT5 sendiri
 Aplikasi RSI membaca candle broker lewat aplikasi sinyal Anda (Vercel): `GET /api/candles`.
 Wajib: upload `app.py` (v19.3) ke repository aplikasi sinyal, EA SinyalMT5 berjalan, dan sebaiknya Upstash Redis aktif di Vercel.
+
+## v7
+- Timeframe M15/M30/H1 otomatis disusun dari data M5 MT5 bila candle TF itu belum dikirim EA.
+- Tampilan lama dibersihkan saat data gagal dimuat (tidak lagi menampilkan angka TF sebelumnya).

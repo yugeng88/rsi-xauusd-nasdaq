@@ -78,7 +78,7 @@ canvas{width:100%;height:380px;display:block;border-radius:10px;background:var(-
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const VERSION="v6",BUILD="12 Nov 2026";$("ver").textContent="Versi "+VERSION+" · "+BUILD;$("ver2").textContent=VERSION;document.title="RSI Signal "+VERSION;
+const VERSION="v7",BUILD="12 Nov 2026";$("ver").textContent="Versi "+VERSION+" · "+BUILD;$("ver2").textContent=VERSION;document.title="RSI Signal "+VERSION;
 const N=8,BUY=[30,20,15],SELL=[70,80,85],TAG={30:"",20:"+",15:"++",70:"",80:"+",85:"++"};
 const def={provider:"auto",mt5Url:"https://sinyal-xauusd.vercel.app",apikey:"",yX:"GC=F",yN:"NQ=F",tX:"XAU/USD",tN:"NDX",live:"0",atrm:"1.5",rr:"2"};
 let cfg=Object.assign({},def);try{Object.assign(cfg,JSON.parse(localStorage.getItem("rsiCfg6")||"{}"))}catch(e){}
@@ -97,13 +97,20 @@ function atr(k,n=14){const o=Array(k.length).fill(null);let a=null;
 const to=(u,ms=9000)=>{const c=new AbortController();setTimeout(()=>c.abort(),ms);return fetch(u,{signal:c.signal})};
 const bk=x=>x.map(v=>({t:v[0],o:+v[1],h:+v[2],l:+v[3],c:+v[4]}));
 const PROXY=[u=>"https://corsproxy.io/?url="+encodeURIComponent(u),u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u)];
+const agg=(k,min)=>{const w=min*60000,o=[];for(const x of k){const b=Math.floor(x.t/w)*w,l=o[o.length-1];
+ if(l&&l.t===b){l.h=Math.max(l.h,x.h);l.l=Math.min(l.l,x.l);l.c=x.c}else o.push({t:b,o:x.o,h:x.h,l:x.l,c:x.c})}return o};
 const SRC={
  mt5:{name:"MT5 broker Anda",fast:20000,run:async()=>{
   const u=(cfg.mt5Url||"").trim().replace(/\/+$/,"");if(!u)throw new Error("alamat aplikasi sinyal belum diisi");
-  const r=await to(`${u}/api/candles?symbol=${sym}&tf=${tfName[tf]}`);const j=await r.json().catch(()=>({}));
+  const get=async n=>{const r=await to(`${u}/api/candles?symbol=${sym}&tf=${n}`);return{r,j:await r.json().catch(()=>({}))}};
+  let {r,j}=await get(tfName[tf]),fromM5=false;
+  if(!r.ok&&tf!="5"){const m=await get("M5");if(m.r.ok&&!m.j.stale){r=m.r;j=m.j;fromM5=true}}
   if(!r.ok)throw new Error(j.error||"HTTP "+r.status);
   if(j.stale)throw new Error("data MT5 sudah lama ("+Math.round(j.age/60)+" menit). MT5/EA mati atau pasar tutup");
-  return j.rows.map(x=>({t:x[0]*1000,o:x[1],h:x[2],l:x[3],c:x[4]}))}},
+  let k=j.rows.map(x=>({t:x[0]*1000,o:x[1],h:x[2],l:x[3],c:x[4]}));
+  if(fromM5)k=agg(k,+tf).slice(1);            // buang candle pertama (belum lengkap)
+  SRC.mt5.name=fromM5?"MT5 broker Anda (disusun dari M5)":"MT5 broker Anda";
+  return k}},
  bfut:{name:"Binance Futures XAUUSDT",fast:15000,run:async()=>{const r=await to(`https://fapi.binance.com/fapi/v1/klines?symbol=XAUUSDT&interval=${tf=="60"?"1h":tf+"m"}&limit=500`);if(!r.ok)throw new Error("HTTP "+r.status);return bk(await r.json())}},
  bspot:{name:"Binance PAXG (token emas)",fast:15000,run:async()=>{const r=await to(`https://data-api.binance.vision/api/v3/klines?symbol=PAXGUSDT&interval=${tf=="60"?"1h":tf+"m"}&limit=500`);if(!r.ok)throw new Error("HTTP "+r.status);return bk(await r.json())}},
  yahoo:{name:"Yahoo Finance",fast:30000,run:async()=>{
@@ -192,10 +199,13 @@ function notify(sig){
  try{if(Notification.permission=="granted")new Notification("Sinyal RSI",{body:txt})}catch(e){}
 }
 
+function clearView(){data=null;$("sub").textContent=sym+" · "+tfName[tf];$("rsiNow").textContent="--";$("status").className="badge";$("status").textContent="—";
+ ["price","entry","sl","tp"].forEach(i=>$(i).textContent="—");$("lastSig").textContent="—";
+ const cv=$("cv"),x=cv.getContext("2d");x.clearRect(0,0,cv.width,cv.height)}
 async function refresh(){
  $("err").hidden=true;
  try{const k=await load();if(k.length<N+3)throw new Error("Data terlalu sedikit.");data=analyze(k);render(data)}
- catch(e){$("err").hidden=false;$("err").textContent=e.message;
+ catch(e){$("err").hidden=false;$("err").textContent=e.message;clearView();
   $("hist").innerHTML='<div class="muted">—</div>'}
  clearTimeout(timer);timer=setTimeout(refresh,used?used.fast:30000);
 }
