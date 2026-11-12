@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1020">
+<title>RSI Signal — XAUUSD & NASDAQ</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#141c30;--line:#26334f;--muted:#9aa8c4;--text:#f2f5ff;--blue:#67a7ff;--green:#35d39a;--red:#ff7185;--yellow:#f5c65d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(900px 420px at 80% -10%,#26355b66,transparent),var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif;padding:18px 14px 36px}
+main{max-width:760px;margin:auto;display:grid;gap:14px}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:21px;margin:0}h2{font-size:15px;margin:0 0 13px}.muted,.sub{color:var(--muted)}.sub{font-size:12px;margin-top:4px}
+.tabs,.timeframes{display:flex;gap:8px}.tabs button,.timeframes button,.refresh{background:#1a2540;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-weight:700;cursor:pointer}.tabs button{flex:1}.tabs button.active,.timeframes button.active{color:white;border-color:var(--blue);background:#20365c}
+.price-row{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px}.price{font-size:29px;font-weight:750;font-variant-numeric:tabular-nums}.signal{font-weight:800;border:1px solid currentColor;border-radius:9px;padding:8px 12px}.BUY{color:var(--green)}.SELL{color:var(--red)}.SIDEWAYS{color:var(--yellow)}
+.rsi-value{font-size:48px;font-weight:800;letter-spacing:-2px;margin:5px 0}.state{font-size:14px;font-weight:700}.bar{height:12px;border-radius:99px;background:linear-gradient(90deg,var(--green) 0 20%,#4f9d85 20% 30%,#71819e 30% 70%,#b47772 70% 80%,var(--red) 80%);position:relative;margin:18px 0 8px}.needle{position:absolute;top:-6px;width:3px;height:24px;background:#fff;border-radius:3px;left:50%;box-shadow:0 0 0 3px #ffffff22}.scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.metric{background:#0e1628;border:1px solid var(--line);border-radius:11px;padding:11px}.metric small{display:block;color:var(--muted);font-size:12px}.metric b{display:block;font-size:17px;margin-top:4px;font-variant-numeric:tabular-nums}
+.levels{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.level{display:flex;justify-content:space-between;gap:8px;background:#0e1628;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.level b{font-variant-numeric:tabular-nums}
+canvas{width:100%;height:210px;display:block}.controls{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}.note{font-size:12px;line-height:1.6;color:var(--muted)}.notice{background:#282315;border:1px solid #6c5723;color:#f5d88c;padding:11px 12px;border-radius:11px;font-size:12px;line-height:1.55}.error{color:#ff9aa7}.footer{text-align:center;color:var(--muted);font-size:11px;line-height:1.6}
+@media(min-width:600px){body{padding:28px}.grid,.levels{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<main>
+  <header><div><h1>RSI Signal Dashboard</h1><div class="sub">XAUUSD · NASDAQ · RSI (Wilder)</div></div><button class="refresh" id="refresh">↻ Refresh</button></header>
+  <nav class="tabs" aria-label="Instrumen"><button class="active" data-symbol="XAUUSD">XAUUSD</button><button data-symbol="NASDAQ">NASDAQ</button></nav>
+  <nav class="timeframes" aria-label="Timeframe"><button class="active" data-tf="5m">M5</button><button data-tf="15m">M15</button><button data-tf="30m">M30</button><button data-tf="60m">H1</button></nav>
+  <section class="card">
+    <div class="controls"><div><div class="muted" id="instrument-label">XAUUSD · Gold futures proxy</div><div class="sub" id="updated">Menunggu data...</div></div><span class="signal SIDEWAYS" id="signal">MEMUAT</span></div>
+    <div class="price-row"><div><div class="muted">Harga terakhir (proxy)</div><div class="price" id="price">—</div></div><div style="text-align:right"><div class="muted">RSI periode 8</div><div class="rsi-value" id="rsi">—</div><div class="state" id="state">Menunggu data</div></div></div>
+    <div class="bar"><span class="needle" id="needle"></span></div><div class="scale"><span>0</span><span>15</span><span>20</span><span>30</span><span>50</span><span>70</span><span>80</span><span>85</span><span>100</span></div>
+  </section>
+  <section class="card"><h2>Grafik RSI (periode 8)</h2><canvas id="chart" width="900" height="300" aria-label="Grafik RSI"></canvas><div class="note">Garis level: 15 / 20 / 30 / 50 / 70 / 80 / 85.</div></section>
+  <section class="card"><h2>Level strategi</h2><div class="levels">
+    <div class="level"><span>Full Sell</span><b>80</b></div><div class="level"><span>R Sell</span><b>70</b></div><div class="level"><span>Sideway</span><b>50</b></div><div class="level"><span>R Buy</span><b>30</b></div><div class="level"><span>Full Buy</span><b>20</b></div><div class="level"><span>SL referensi atas</span><b>85</b></div><div class="level"><span>SL referensi bawah</span><b>15</b></div></div></section>
+  <section class="card"><h2>Ringkasan pembacaan</h2><div class="grid">
+    <div class="metric"><small>Instrumen</small><b id="m-symbol">XAUUSD</b></div><div class="metric"><small>Timeframe</small><b id="m-tf">M5</b></div><div class="metric"><small>RSI</small><b id="m-rsi">—</b></div><div class="metric"><small>Kondisi</small><b id="m-condition">—</b></div><div class="metric"><small>Periode</small><b>8</b></div><div class="metric"><small>Apply to</small><b>Close</b></div></div></section>
+  <div class="notice"><b>Catatan data:</b> aplikasi mengambil data publik Yahoo Finance. XAUUSD memakai kontrak emas berjangka <b>GC=F</b> dan NASDAQ memakai <b>NQ=F</b> sebagai proxy, bukan kuotasi CFD broker yang persis sama. Data dapat terlambat, berbeda harga/spread, atau gagal dimuat karena batas layanan/jaringan.</div>
+  <div class="note">Pembacaan level: RSI ≥ 80 = Full Sell; 70–79,99 = R Sell; 30,01–69,99 = Sideway; 20,01–30 = R Buy; RSI ≤ 20 = Full Buy. Level 85 dan 15 hanya referensi ekstrem/SL RSI, bukan harga stop-loss.</div>
+  <div class="footer">Alat edukasi analisis teknikal, bukan rekomendasi transaksi atau jaminan hasil. Periksa data dan konfirmasi secara mandiri.</div>
+  <div class="note error" id="error" role="status"></div>
+</main>
+<script>
+(() => {
+  const PERIOD=8, LEVELS=[15,20,30,50,70,80,85];
+  const SYMBOLS={XAUUSD:{ticker:"GC=F",label:"XAUUSD · Gold futures proxy"},NASDAQ:{ticker:"NQ=F",label:"NASDAQ · Nasdaq-100 futures proxy"}};
+  const TF_LABEL={"5m":"M5","15m":"M15","30m":"M30","60m":"H1"};
+  let symbol="XAUUSD", interval="5m", busy=false;
+  const $=id=>document.getElementById(id);
+  function rsiWilder(closes,n){
+    if(closes.length<=n)return [];
+    let gain=0,loss=0;
+    for(let i=1;i<=n;i++){const d=closes[i]-closes[i-1];gain+=Math.max(d,0);loss+=Math.max(-d,0)}
+    let ag=gain/n,al=loss/n,arr=Array(n).fill(null);
+    const val=()=>al===0?100:gain===0?0:100-100/(1+ag/al);
+    arr.push(val());
+    for(let i=n+1;i<closes.length;i++){const d=closes[i]-closes[i-1];ag=(ag*(n-1)+Math.max(d,0))/n;al=(al*(n-1)+Math.max(-d,0))/n;arr.push(al===0?100:100-100/(1+ag/al))}
+    return arr;
+  }
+  function classify(v){
+    if(v>=80)return ["FULL SELL","SELL"];
+    if(v>=70)return ["R SELL","SELL"];
+    if(v<=20)return ["FULL BUY","BUY"];
+    if(v<=30)return ["R BUY","BUY"];
+    return ["SIDEWAY","SIDEWAYS"];
+  }
+  function draw(values){
+    const c=$("chart"),ctx=c.getContext("2d"),w=c.width,h=c.height,pad={l:42,r:12,t:15,b:24};
+    ctx.clearRect(0,0,w,h);ctx.font="14px system-ui";ctx.strokeStyle="#293653";ctx.fillStyle="#9aa8c4";ctx.lineWidth=1;
+    [0,20,30,50,70,80,100].forEach(v=>{const y=pad.t+(100-v)*(h-pad.t-pad.b)/100;ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(String(v),7,y+5)});
+    LEVELS.forEach(v=>{const y=pad.t+(100-v)*(h-pad.t-pad.b)/100;ctx.strokeStyle=v===50?"#8290aa":(v===15||v===85?"#ff7185":"#526c92");ctx.setLineDash(v===50?[]:[6,6]);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke()});ctx.setLineDash([]);
+    const valid=values.filter(Number.isFinite);if(valid.length<2)return;
+    ctx.strokeStyle="#67a7ff";ctx.lineWidth=3;ctx.beginPath();
+    valid.forEach((v,i)=>{const x=pad.l+i*(w-pad.l-pad.r)/(valid.length-1),y=pad.t+(100-v)*(h-pad.t-pad.b)/100;i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();
+  }
+  async function load(){
+    if(busy)return;busy=true;$("error").textContent="";$("signal").textContent="MEMUAT";$("updated").textContent="Mengambil data candle...";
+    try{
+      const now=Math.floor(Date.now()/1000),range=interval==="5m"?"5d":interval==="15m"?"1mo":interval==="30m"?"1mo":"3mo";
+      const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(SYMBOLS[symbol].ticker)}?range=${range}&interval=${interval}&includePrePost=true`;
+      const response=await fetch(url,{cache:"no-store"});if(!response.ok)throw new Error("Sumber data mengembalikan HTTP "+response.status);
+      const json=await response.json(),result=json.chart&&json.chart.result&&json.chart.result[0];if(!result)throw new Error("Data candle tidak tersedia.");
+      const q=result.indicators.quote[0],closes=(q.close||[]).map(x=>x==null?null:Number(x));
+      const pairs=closes.map((v,i)=>({v,t:result.timestamp[i]})).filter(x=>Number.isFinite(x.v));
+      const clean=pairs.map(x=>x.v),rsi=rsiWilder(clean,PERIOD),last=clean[clean.length-1],rv=rsi[rsi.length-1];
+      if(!Number.isFinite(rv))throw new Error("Candle belum cukup untuk menghitung RSI.");
+      const [label,kind]=classify(rv);$("instrument-label").textContent=SYMBOLS[symbol].label;
+      $("price").textContent=last.toLocaleString("en-US",{maximumFractionDigits:2});
+      $("rsi").textContent=rv.toFixed(2);$("state").textContent=label;$("state").className="state "+kind;
+      $("signal").textContent=label;$("signal").className="signal "+kind;
+      $("needle").style.left=Math.max(0,Math.min(100,rv))+"%";
+      $("updated").textContent="Update: "+new Date(pairs[pairs.length-1].t*1000).toLocaleString("id-ID");
+      $("m-symbol").textContent=symbol;$("m-tf").textContent=TF_LABEL[interval];$("m-rsi").textContent=rv.toFixed(2);$("m-condition").textContent=label;
+      draw(rsi.filter(Number.isFinite).slice(-100));
+    }catch(e){$("error").textContent="Gagal memuat data: "+e.message+" Coba tekan Refresh atau buka kembali saat koneksi tersedia.";$("updated").textContent="Data belum tersedia";$("signal").textContent="NO DATA"}
+    finally{busy=false}
+  }
+  document.querySelectorAll("[data-symbol]").forEach(b=>b.addEventListener("click",()=>{symbol=b.dataset.symbol;document.querySelectorAll("[data-symbol]").forEach(x=>x.classList.toggle("active",x===b));load()}));
+  document.querySelectorAll("[data-tf]").forEach(b=>b.addEventListener("click",()=>{interval=b.dataset.tf;document.querySelectorAll("[data-tf]").forEach(x=>x.classList.toggle("active",x===b));load()}));
+  $("refresh").addEventListener("click",load);load();setInterval(load,60000);
+})();
+</script>
+</body></html>
