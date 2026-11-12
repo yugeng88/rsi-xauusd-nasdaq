@@ -42,3 +42,10 @@ Pine Script versi terbaru menambahkan:
 - Alert dinamis berisi Entry, SL, dan TP. Saat membuat alert, pilih indikator ini lalu kondisi **Any alert() function call**.
 
 Catatan: ATR dan rasio risiko/imbalan tersebut adalah nilai awal contoh, bukan jaminan level terbaik. Sesuaikan dengan volatilitas instrumen, spread, dan manajemen risiko akun. Garis menunjukkan rencana trade terbaru; script ini bukan strategy tester dan tidak menutup posisi secara otomatis.
+
+## v3 — Sinyal saat RSI menyentuh level
+- BUY saat RSI menyentuh/menembus ke bawah 30 (BUY+ di 20, BUY++ di 15).
+- SELL saat RSI menyentuh/menembus ke atas 70 (SELL+ di 80, SELL++ di 85).
+- Sinyal hanya muncul sekali saat RSI baru masuk zona (bukan di setiap candle).
+- Opsi "Signal saat RSI menyentuh level": **Bar close** (tidak repaint) atau **Intrabar** (langsung, tapi bisa hilang jika RSI balik sebelum candle tutup).
+- Entry/SL/TP dipicu level 30 dan 70. Alert tersedia untuk setiap level.
