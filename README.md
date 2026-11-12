@@ -1,4 +1,4 @@
-# RSI Signal App v7 — XAUUSD & NASDAQ
+# RSI Signal App v8 — XAUUSD & NASDAQ
 
 Aplikasi web mandiri (tanpa TradingView). RSI dihitung langsung di browser (RSI 8, Close, metode Wilder).
 
@@ -27,3 +27,8 @@ Wajib: upload `app.py` (v19.3) ke repository aplikasi sinyal, EA SinyalMT5 berja
 ## v7
 - Timeframe M15/M30/H1 otomatis disusun dari data M5 MT5 bila candle TF itu belum dikirim EA.
 - Tampilan lama dibersihkan saat data gagal dimuat (tidak lagi menampilkan angka TF sebelumnya).
+
+## v8
+- Pilihan pair (XAUUSD/NASDAQ) dan timeframe menempel di bagian atas layar saat halaman digulir.
+- Pengaturan disembunyikan; buka lewat tombol ⚙.
+- Riwayat sinyal dibuat ringkas dan bisa digeser (scroll) di dalam kotaknya.
