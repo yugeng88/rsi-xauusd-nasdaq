@@ -1,4 +1,4 @@
-# RSI Signal App v4 — XAUUSD & NASDAQ
+# RSI Signal App v6 — XAUUSD & NASDAQ
 
 Aplikasi web mandiri (tanpa TradingView). RSI dihitung langsung di browser (RSI 8, Close, metode Wilder).
 
@@ -9,12 +9,17 @@ Aplikasi web mandiri (tanpa TradingView). RSI dihitung langsung di browser (RSI 
 - Mode: saat candle tutup (default, tidak repaint) atau live.
 - Notifikasi suara, getar, dan browser saat sinyal baru muncul (aplikasi harus terbuka).
 
-## Sumber data
-- Binance Futures (default, tanpa API key): XAUUSDT (emas). NASDAQ belum tersedia di sumber ini.
-- Twelve Data (API key gratis di twelvedata.com): XAU/USD dan NDX. Jika NDX tidak tersedia di paket Anda, ganti simbol di Pengaturan.
+## Sumber data (v5: otomatis, dengan cadangan)
+- Emas: Binance Futures XAUUSDT, lalu Binance PAXG (token emas), lalu Yahoo Finance (GC=F).
+- NASDAQ: Twelve Data (jika API key diisi), lalu Yahoo Finance (NQ=F, futures Nasdaq 100).
+- Sumber yang dipakai ditampilkan di bawah chart. Harga bisa sedikit berbeda dari broker/TradingView.
 
 ## Deploy GitHub Pages
 Upload `index.html` dan `.nojekyll` ke repository, lalu Settings > Pages > Deploy from a branch > main / root.
 File `RSI_Signal_TradingView.pine` bersifat opsional (khusus TradingView).
 
 Alat bantu analisis, bukan rekomendasi transaksi.
+
+## v6 — Data dari MT5 sendiri
+Aplikasi RSI membaca candle broker lewat aplikasi sinyal Anda (Vercel): `GET /api/candles`.
+Wajib: upload `app.py` (v19.3) ke repository aplikasi sinyal, EA SinyalMT5 berjalan, dan sebaiknya Upstash Redis aktif di Vercel.
