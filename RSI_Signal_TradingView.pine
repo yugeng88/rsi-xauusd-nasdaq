@@ -1,0 +1,52 @@
+//@version=6
+indicator("RSI 8 — BUY / SELL / SIDEWAY (XAUUSD & NASDAQ)", overlay=false, max_labels_count=500)
+
+// Pengaturan utama
+rsiLength = input.int(8, "RSI Period", minval=1)
+src = input.source(close, "Apply to")
+level15 = input.float(15, "Level 15")
+level20 = input.float(20, "Level 20")
+level30 = input.float(30, "Level 30")
+level50 = input.float(50, "Level 50")
+level70 = input.float(70, "Level 70")
+level80 = input.float(80, "Level 80")
+level85 = input.float(85, "Level 85")
+
+r = ta.rsi(src, rsiLength)
+
+// Status sederhana: BUY di bawah/tepat 30, SELL di atas/tepat 70, selainnya SIDEWAY.
+state = r <= level30 ? 1 : r >= level70 ? -1 : 0
+stateText = state == 1 ? "BUY" : state == -1 ? "SELL" : "SIDEWAY"
+
+// Perubahan status hanya dipastikan pada candle yang sudah tutup.
+confirmed = barstate.isconfirmed
+buySignal = confirmed and state == 1 and state[1] != 1
+sellSignal = confirmed and state == -1 and state[1] != -1
+sidewaySignal = confirmed and state == 0 and state[1] != 0
+
+plot(r, "RSI 8", color=color.aqua, linewidth=2)
+hline(level15, "15", color=color.new(color.green, 25))
+hline(level20, "20", color=color.new(color.green, 10))
+hline(level30, "30", color=color.green)
+hline(level50, "50", color=color.gray)
+hline(level70, "70", color=color.red)
+hline(level80, "80", color=color.new(color.red, 10))
+hline(level85, "85", color=color.new(color.red, 25))
+
+plotshape(buySignal, title="BUY", text="BUY", style=shape.labelup, location=location.bottom, color=color.green, textcolor=color.white, size=size.tiny)
+plotshape(sellSignal, title="SELL", text="SELL", style=shape.labeldown, location=location.top, color=color.red, textcolor=color.white, size=size.tiny)
+plotshape(sidewaySignal, title="SIDEWAY", text="SIDEWAY", style=shape.labelup, location=location.bottom, color=color.gray, textcolor=color.white, size=size.tiny)
+
+var table panel = table.new(position.top_right, 2, 3, border_width=1)
+if barstate.islast
+    bg = state == 1 ? color.new(color.green, 10) : state == -1 ? color.new(color.red, 10) : color.new(color.gray, 25)
+    table.cell(panel, 0, 0, "RSI 8", text_color=color.white, bgcolor=color.new(color.blue, 55))
+    table.cell(panel, 1, 0, str.tostring(r, "#.00"), text_color=color.white, bgcolor=color.new(color.blue, 55))
+    table.cell(panel, 0, 1, "SINYAL", text_color=color.white, bgcolor=color.new(color.black, 0))
+    table.cell(panel, 1, 1, stateText, text_color=color.white, bgcolor=bg)
+    table.cell(panel, 0, 2, "LEVEL", text_color=color.white, bgcolor=color.new(color.black, 0))
+    table.cell(panel, 1, 2, state == 1 ? "≤ 30" : state == -1 ? "≥ 70" : "30–70", text_color=color.white, bgcolor=bg)
+
+alertcondition(buySignal, title="RSI BUY", message="RSI 8 BUY | {{ticker}} | TF {{interval}} | Close {{close}}")
+alertcondition(sellSignal, title="RSI SELL", message="RSI 8 SELL | {{ticker}} | TF {{interval}} | Close {{close}}")
+alertcondition(sidewaySignal, title="RSI SIDEWAY", message="RSI 8 SIDEWAY | {{ticker}} | TF {{interval}} | Close {{close}}")
