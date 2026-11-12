@@ -59,7 +59,8 @@ canvas{width:100%;height:380px;display:block;border-radius:10px;background:var(-
  <h2>Pengaturan</h2>
  <div class="f">
   <label>Sumber data
-   <select id="provider"><option value="auto">Otomatis (coba beberapa sumber)</option><option value="bfut">Binance Futures (emas)</option><option value="bspot">Binance PAXG (proxy emas)</option><option value="yahoo">Yahoo Finance</option><option value="td">Twelve Data (perlu API key)</option></select></label>
+   <select id="provider"><option value="auto">Otomatis (MT5 dulu, lalu cadangan)</option><option value="mt5">MT5 saya (lewat aplikasi sinyal)</option><option value="bfut">Binance Futures (emas)</option><option value="bspot">Binance PAXG (proxy emas)</option><option value="yahoo">Yahoo Finance</option><option value="td">Twelve Data (perlu API key)</option></select></label>
+  <label>Alamat aplikasi sinyal (untuk data MT5)<input id="mt5Url" placeholder="https://sinyal-xauusd.vercel.app"></label>
   <label>Twelve Data API key (opsional)<input id="apikey" placeholder="tempel API key" autocomplete="off"></label>
   <label>Yahoo simbol emas<input id="yX"></label>
   <label>Yahoo simbol NASDAQ<input id="yN"></label>
@@ -77,10 +78,10 @@ canvas{width:100%;height:380px;display:block;border-radius:10px;background:var(-
 <script>
 (()=>{
 const $=id=>document.getElementById(id);
-const VERSION="v5",BUILD="12 Nov 2026";$("ver").textContent="Versi "+VERSION+" · "+BUILD;$("ver2").textContent=VERSION;document.title="RSI Signal "+VERSION;
+const VERSION="v6",BUILD="12 Nov 2026";$("ver").textContent="Versi "+VERSION+" · "+BUILD;$("ver2").textContent=VERSION;document.title="RSI Signal "+VERSION;
 const N=8,BUY=[30,20,15],SELL=[70,80,85],TAG={30:"",20:"+",15:"++",70:"",80:"+",85:"++"};
-const def={provider:"auto",apikey:"",yX:"GC=F",yN:"NQ=F",tX:"XAU/USD",tN:"NDX",live:"0",atrm:"1.5",rr:"2"};
-let cfg=Object.assign({},def);try{Object.assign(cfg,JSON.parse(localStorage.getItem("rsiCfg5")||"{}"))}catch(e){}
+const def={provider:"auto",mt5Url:"https://sinyal-xauusd.vercel.app",apikey:"",yX:"GC=F",yN:"NQ=F",tX:"XAU/USD",tN:"NDX",live:"0",atrm:"1.5",rr:"2"};
+let cfg=Object.assign({},def);try{Object.assign(cfg,JSON.parse(localStorage.getItem("rsiCfg6")||"{}"))}catch(e){}
 let sym="XAUUSD",tf="5",data=null,lastKey=null,timer,used=null;
 const fmt=(v,d=2)=>v==null||isNaN(v)?"—":v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
 const tfName={5:"M5",15:"M15",30:"M30",60:"H1"};
@@ -97,6 +98,12 @@ const to=(u,ms=9000)=>{const c=new AbortController();setTimeout(()=>c.abort(),ms
 const bk=x=>x.map(v=>({t:v[0],o:+v[1],h:+v[2],l:+v[3],c:+v[4]}));
 const PROXY=[u=>"https://corsproxy.io/?url="+encodeURIComponent(u),u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u)];
 const SRC={
+ mt5:{name:"MT5 broker Anda",fast:20000,run:async()=>{
+  const u=(cfg.mt5Url||"").trim().replace(/\/+$/,"");if(!u)throw new Error("alamat aplikasi sinyal belum diisi");
+  const r=await to(`${u}/api/candles?symbol=${sym}&tf=${tfName[tf]}`);const j=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(j.error||"HTTP "+r.status);
+  if(j.stale)throw new Error("data MT5 sudah lama ("+Math.round(j.age/60)+" menit). MT5/EA mati atau pasar tutup");
+  return j.rows.map(x=>({t:x[0]*1000,o:x[1],h:x[2],l:x[3],c:x[4]}))}},
  bfut:{name:"Binance Futures XAUUSDT",fast:15000,run:async()=>{const r=await to(`https://fapi.binance.com/fapi/v1/klines?symbol=XAUUSDT&interval=${tf=="60"?"1h":tf+"m"}&limit=500`);if(!r.ok)throw new Error("HTTP "+r.status);return bk(await r.json())}},
  bspot:{name:"Binance PAXG (token emas)",fast:15000,run:async()=>{const r=await to(`https://data-api.binance.vision/api/v3/klines?symbol=PAXGUSDT&interval=${tf=="60"?"1h":tf+"m"}&limit=500`);if(!r.ok)throw new Error("HTTP "+r.status);return bk(await r.json())}},
  yahoo:{name:"Yahoo Finance",fast:30000,run:async()=>{
@@ -113,7 +120,7 @@ const SRC={
 };
 const nice=e=>e.name=="AbortError"?"timeout":(/Load failed|Failed to fetch|NetworkError/.test(e.message)?"koneksi/CORS diblokir":e.message);
 async function load(){
- const order=cfg.provider!="auto"?[cfg.provider]:sym=="XAUUSD"?["bfut","bspot","yahoo","td"]:["td","yahoo"];
+ const order=cfg.provider!="auto"?[cfg.provider]:sym=="XAUUSD"?["mt5","bfut","bspot","yahoo","td"]:["mt5","td","yahoo"];
  const errs=[];
  for(const id of order){const S=SRC[id];
   if(id=="td"&&!cfg.apikey){if(cfg.provider=="td")throw new Error("Isi Twelve Data API key di Pengaturan.");continue}
@@ -196,9 +203,9 @@ async function refresh(){
 document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{sym=b.dataset.s;document.querySelectorAll("[data-s]").forEach(x=>x.classList.toggle("on",x==b));lastKey=null;refresh()});
 document.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{tf=b.dataset.t;document.querySelectorAll("[data-t]").forEach(x=>x.classList.toggle("on",x==b));lastKey=null;refresh()});
 $("reload").onclick=refresh;
-function fill(){$("provider").value=cfg.provider;$("apikey").value=cfg.apikey;["yX","yN","tX","tN"].forEach(i=>$(i).value=cfg[i]);$("live").value=cfg.live;$("atrm").value=cfg.atrm;$("rr").value=cfg.rr}
-$("save").onclick=()=>{cfg={provider:$("provider").value,apikey:$("apikey").value.trim(),yX:$("yX").value.trim(),yN:$("yN").value.trim(),tX:$("tX").value.trim(),tN:$("tN").value.trim(),live:$("live").value,atrm:$("atrm").value||"1.5",rr:$("rr").value||"2"};
- try{localStorage.setItem("rsiCfg5",JSON.stringify(cfg))}catch(e){}lastKey=null;refresh()};
+function fill(){$("provider").value=cfg.provider;$("apikey").value=cfg.apikey;["yX","yN","tX","tN","mt5Url"].forEach(i=>$(i).value=cfg[i]);$("live").value=cfg.live;$("atrm").value=cfg.atrm;$("rr").value=cfg.rr}
+$("save").onclick=()=>{cfg={provider:$("provider").value,apikey:$("apikey").value.trim(),mt5Url:$("mt5Url").value.trim(),yX:$("yX").value.trim(),yN:$("yN").value.trim(),tX:$("tX").value.trim(),tN:$("tN").value.trim(),live:$("live").value,atrm:$("atrm").value||"1.5",rr:$("rr").value||"2"};
+ try{localStorage.setItem("rsiCfg6",JSON.stringify(cfg))}catch(e){}lastKey=null;refresh()};
 $("notif").onclick=async()=>{try{const p=await Notification.requestPermission();$("notif").textContent=p=="granted"?"Notifikasi aktif ✓":"Notifikasi ditolak (suara & getar tetap jalan)"}catch(e){$("notif").textContent="Browser tidak mendukung notifikasi"}};
 fill();addEventListener("resize",()=>data&&draw(data));refresh();
 })();
