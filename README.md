@@ -1,51 +1,20 @@
-# RSI Dashboard — XAUUSD & NASDAQ
+# RSI Signal App v4 — XAUUSD & NASDAQ
 
-## Konfigurasi
-- NASDAQ: `FX:NAS100` (US 100 Index · FX)
-- XAUUSD: `OANDA:XAUUSD`
-- RSI: periode 8, source Close
-- Level: 15, 20, 30, 50, 70, 80, 85
-- Timeframe dashboard: M5, M15, M30, H1
-- Sinyal Pine Script: BUY (RSI <= 30), SELL (RSI >= 70), SIDEWAY (RSI di antara 30 dan 70)
+Aplikasi web mandiri (tanpa TradingView). RSI dihitung langsung di browser (RSI 8, Close, metode Wilder).
 
-## Isi ZIP
-- `index.html`: dashboard responsif untuk iPhone dan desktop dengan chart TradingView.
-- `RSI_Signal_TradingView.pine`: indikator Pine Script dengan label status, marker perubahan sinyal, dan alertcondition.
-- `.nojekyll`: file pendukung GitHub Pages.
+## Sinyal
+- BUY saat RSI menyentuh 30 ke bawah (BUY+ di 20, BUY++ di 15)
+- SELL saat RSI menyentuh 70 ke atas (SELL+ di 80, SELL++ di 85)
+- Sinyal muncul sekali saat RSI baru masuk zona. Entry/SL/TP (ATR 14 × 1,5, TP 2R) untuk level 30/70.
+- Mode: saat candle tutup (default, tidak repaint) atau live.
+- Notifikasi suara, getar, dan browser saat sinyal baru muncul (aplikasi harus terbuka).
 
-## Cara menggunakan
-1. Ekstrak ZIP.
-2. Upload semua file ke repository GitHub.
-3. Buka Settings > Pages.
-4. Pada Build and deployment, pilih Deploy from a branch, branch `main`, folder `/ (root)`, lalu Save.
-5. Buka alamat GitHub Pages yang diberikan GitHub.
-6. Untuk mengaktifkan sinyal otomatis, buka TradingView > Pine Editor.
-7. Buka file `RSI_Signal_TradingView.pine`, salin seluruh isinya ke Pine Editor, lalu pilih Save dan Add to chart.
-8. Pilih simbol `FX:NAS100` atau `OANDA:XAUUSD` dan timeframe M5/M15/M30/H1.
-9. Buat Alert pada indikator ini. Pilih kondisi RSI BUY, RSI SELL, atau RSI SIDEWAY sesuai kebutuhan.
+## Sumber data
+- Binance Futures (default, tanpa API key): XAUUSDT (emas). NASDAQ belum tersedia di sumber ini.
+- Twelve Data (API key gratis di twelvedata.com): XAU/USD dan NDX. Jika NDX tidak tersedia di paket Anda, ganti simbol di Pengaturan.
 
-## Catatan teknis penting
-GitHub Pages adalah hosting statis. TradingView Advanced Chart Embed tidak menyediakan API browser untuk membaca nilai RSI dari widget atau menerima alert akun secara langsung. Karena itu, Pine Script menjalankan perhitungan dan alert di TradingView. Marker sinyal terlihat pada chart dan riwayat historisnya mengikuti bar yang dimuat TradingView; halaman GitHub Pages tidak dapat menampilkan riwayat alert akun TradingView secara otomatis tanpa endpoint/backend tambahan.
+## Deploy GitHub Pages
+Upload `index.html` dan `.nojekyll` ke repository, lalu Settings > Pages > Deploy from a branch > main / root.
+File `RSI_Signal_TradingView.pine` bersifat opsional (khusus TradingView).
 
-Widget RSI bawaan TradingView ditampilkan sebagai referensi. Untuk memastikan seluruh level 15, 20, 30, 50, 70, 80, 85 dan sinyal BUY/SELL/SIDEWAY, pasang Pine Script yang disertakan.
-
-## Disclaimer
-Indikator bersifat alat bantu analisis, bukan rekomendasi transaksi atau jaminan profit. Periksa data, sesi, spread, dan karakteristik simbol broker sebelum mengambil keputusan.
-
-
-## Entry, Stop Loss, Take Profit
-Pine Script versi terbaru menambahkan:
-- Entry: harga penutupan candle saat sinyal BUY/SELL terkonfirmasi.
-- Stop Loss: berbasis ATR(14) × 1,5 (dapat diubah di pengaturan indikator).
-- Take Profit: target 2R dari jarak Entry ke Stop Loss (dapat diubah).
-- Garis Entry, SL, dan TP serta tabel harga pada chart.
-- Alert dinamis berisi Entry, SL, dan TP. Saat membuat alert, pilih indikator ini lalu kondisi **Any alert() function call**.
-
-Catatan: ATR dan rasio risiko/imbalan tersebut adalah nilai awal contoh, bukan jaminan level terbaik. Sesuaikan dengan volatilitas instrumen, spread, dan manajemen risiko akun. Garis menunjukkan rencana trade terbaru; script ini bukan strategy tester dan tidak menutup posisi secara otomatis.
-
-## v3 — Sinyal saat RSI menyentuh level
-- BUY saat RSI menyentuh/menembus ke bawah 30 (BUY+ di 20, BUY++ di 15).
-- SELL saat RSI menyentuh/menembus ke atas 70 (SELL+ di 80, SELL++ di 85).
-- Sinyal hanya muncul sekali saat RSI baru masuk zona (bukan di setiap candle).
-- Opsi "Signal saat RSI menyentuh level": **Bar close** (tidak repaint) atau **Intrabar** (langsung, tapi bisa hilang jika RSI balik sebelum candle tutup).
-- Entry/SL/TP dipicu level 30 dan 70. Alert tersedia untuk setiap level.
+Alat bantu analisis, bukan rekomendasi transaksi.
